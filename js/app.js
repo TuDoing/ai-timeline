@@ -137,6 +137,21 @@ function renderSidebar() {
       render();
     });
   });
+
+  // Legend
+  const legend = document.getElementById('sidebar-legend');
+  if (legend) {
+    legend.innerHTML = `
+      <div class="legend-title">图例</div>
+      <div class="legend-grid">
+        ${Object.entries(TYPE_META).map(([, m]) =>
+          `<div class="legend-item">
+            <span class="legend-emoji">${m.emoji}</span>
+            <span>${m.label}</span>
+          </div>`
+        ).join('')}
+      </div>`;
+  }
 }
 
 /* ─── Type Filter Chips ─────────────────── */
@@ -197,49 +212,60 @@ function renderTimeline() {
   });
   const years = Object.keys(byYear).map(Number).sort((a,b) => b - a);
 
-  container.innerHTML = years.map(yr => {
-    const evts = byYear[yr].sort((a,b) => (a.date||'') < (b.date||'') ? 1 : -1);
-    return `
-      <div class="year-group">
-        <div class="year-label">
-          <h2>${yr}</h2>
-          <div class="year-label-line"></div>
-          <span class="year-event-count">${evts.length} 个事件</span>
-        </div>
-        <div class="events-grid">
-          ${evts.map(e => renderEventCard(e, q)).join('')}
-        </div>
-      </div>`;
-  }).join('');
+  container.innerHTML = `<div class="timeline-track">${
+    years.map(yr => {
+      const evts = byYear[yr].sort((a,b) => (a.date||'') < (b.date||'') ? 1 : -1);
+      return `
+        <div class="tl-year">
+          <div class="tl-year-head">
+            <div class="tl-year-gutter"><span class="tl-yr-node"></span></div>
+            <div class="tl-year-bar">
+              <div class="tl-hr"></div>
+              <span class="tl-yr-lbl">${yr}</span>
+              <div class="tl-hr"></div>
+              <span class="tl-yr-cnt">${evts.length} 个事件</span>
+            </div>
+          </div>
+          ${evts.map(e => renderEventNode(e, q)).join('')}
+        </div>`;
+    }).join('')
+  }</div>`;
 
-  container.querySelectorAll('.event-card').forEach(el => {
+  container.querySelectorAll('.tl-event').forEach(el => {
     el.addEventListener('click', () => openModal(el.dataset.id));
   });
 }
 
-function renderEventCard(evt, q) {
+function renderEventNode(evt, q) {
   const co = getCompany(evt.company_id);
   const color = co?.color || '#6366f1';
   const meta = TYPE_META[evt.type] || TYPE_META.event;
   const imp = evt.importance || 3;
+  const stars = '★'.repeat(imp) + '☆'.repeat(5 - imp);
 
-  const stars = Array.from({length:5}, (_,i) =>
-    `<div class="importance-star ${i < imp ? 'filled' : ''}"></div>`).join('');
+  const people = evt.people?.length
+    ? `<span class="tl-sep">·</span><span class="tl-people">${escapeHTML(evt.people.slice(0,2).join('、'))}</span>`
+    : '';
 
   return `
-    <div class="event-card" data-id="${evt.id}" style="--company-color:${color}">
-      <div class="event-card-header">
-        <span class="event-type-icon">${meta.emoji}</span>
-        <span class="event-title">${highlight(evt.title, q)}</span>
-        <div class="importance-stars">${stars}</div>
+    <div class="tl-event" data-id="${evt.id}" style="--co:${color}">
+      <div class="tl-event-gutter">
+        <div class="tl-dot"></div>
       </div>
-      <p class="event-summary">${highlight(evt.summary || '', q)}</p>
-      <div class="event-card-footer">
-        <div class="event-company-badge">
-          <div class="event-company-dot" style="background:${color}"></div>
-          <span>${escapeHTML(co?.name || evt.company_id)}</span>
+      <div class="tl-connector"></div>
+      <div class="tl-card">
+        <div class="tl-card-top">
+          <span class="tl-type-emoji">${meta.emoji}</span>
+          <span class="tl-title">${highlight(evt.title, q)}</span>
+          <span class="tl-stars">${stars}</span>
         </div>
-        <span class="event-date">${evt.date ? evt.date.slice(0,7) : evt.year}</span>
+        <div class="tl-meta">
+          <span class="tl-date">${evt.date || evt.year}</span>
+          <span class="tl-sep">·</span>
+          <span class="tl-company-name" style="color:${color}">${escapeHTML(co?.name || evt.company_id)}</span>
+          ${people}
+        </div>
+        ${evt.summary ? `<div class="tl-summ">${highlight(evt.summary, q)}</div>` : ''}
       </div>
     </div>`;
 }
