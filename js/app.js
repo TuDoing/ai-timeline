@@ -218,6 +218,7 @@ function renderTimeline() {
       return `
         <div class="tl-year">
           <div class="tl-year-head">
+            <div class="tl-month-pad"></div>
             <div class="tl-year-gutter"><span class="tl-yr-node"></span></div>
             <div class="tl-year-bar">
               <div class="tl-hr"></div>
@@ -226,7 +227,7 @@ function renderTimeline() {
               <span class="tl-yr-cnt">${evts.length} 个事件</span>
             </div>
           </div>
-          ${evts.map(e => renderEventNode(e, q)).join('')}
+          ${evts.map((e, i) => renderEventNode(e, q, i > 0 ? evts[i-1] : null)).join('')}
         </div>`;
     }).join('')
   }</div>`;
@@ -236,12 +237,27 @@ function renderTimeline() {
   });
 }
 
-function renderEventNode(evt, q) {
+const MONTHS_ZH = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
+function getMonth(evt) {
+  if (evt.date && evt.date.length >= 7) {
+    const m = parseInt(evt.date.slice(5, 7), 10);
+    return MONTHS_ZH[m - 1] || '';
+  }
+  return '';
+}
+
+function renderEventNode(evt, q, prevEvt) {
   const co = getCompany(evt.company_id);
   const color = co?.color || '#6366f1';
   const meta = TYPE_META[evt.type] || TYPE_META.event;
   const imp = evt.importance || 3;
   const stars = '★'.repeat(imp) + '☆'.repeat(5 - imp);
+
+  // Only show month label when it changes from the previous event
+  const month = getMonth(evt);
+  const prevMonth = prevEvt ? getMonth(prevEvt) : null;
+  const showMonth = month && month !== prevMonth;
 
   const people = evt.people?.length
     ? `<span class="tl-sep">·</span><span class="tl-people">${escapeHTML(evt.people.slice(0,2).join('、'))}</span>`
@@ -249,6 +265,7 @@ function renderEventNode(evt, q) {
 
   return `
     <div class="tl-event" data-id="${evt.id}" style="--co:${color}">
+      <div class="tl-month">${showMonth ? month : ''}</div>
       <div class="tl-event-gutter">
         <div class="tl-dot"></div>
       </div>

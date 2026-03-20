@@ -298,6 +298,27 @@ input { font-family: var(--font); }
   cursor: pointer;
   min-height: 56px;
 }
+
+/* Month label column (left of spine) */
+.tl-month {
+  width: 40px;
+  flex-shrink: 0;
+  text-align: right;
+  padding-right: 8px;
+  padding-top: 17px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+/* Spacer in year-head to align with month column */
+.tl-month-pad {
+  width: 40px;
+  flex-shrink: 0;
+}
 .tl-event:hover .tl-card {
   background: var(--bg-hover);
   border-color: var(--border-2);
@@ -672,6 +693,8 @@ input { font-family: var(--font); }
   .tl-year-gutter { width: 36px; }
   .tl-event-gutter { width: 36px; }
   .tl-connector { width: 8px; }
+  .tl-month { display: none; }
+  .tl-month-pad { display: none; }
   #modal { width: 100%; }
   #modal-overlay { padding: 56px 0 0; align-items: flex-end; }
   #modal { border-radius: 14px 14px 0 0; max-height: 85vh; }
